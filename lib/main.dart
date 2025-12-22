@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'app_shell.dart';
 
 void main() {
   runApp(const DaylineApp());
@@ -12,10 +13,8 @@ class DaylineApp extends StatelessWidget {
     return MaterialApp(
       title: 'Dayline',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-      ),
-      home: const Placeholder(),
+      theme: ThemeData(useMaterial3: true),
+      home: const AppShell(),
     );
   }
 }

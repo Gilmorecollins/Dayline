@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 import 'features/home/home_screen.dart';
 import 'features/today/today_screen.dart';
+import 'features/task/add_task_dialog.dart';
 
 import 'core/store/task_store.dart';
 import 'core/store/demo_task_seed.dart';
-import 'core/logic/today_focus_engine.dart';
 
 enum AppSection {
   dashboard,
@@ -36,16 +36,13 @@ class _AppShellState extends State<AppShell> {
 
   @override
   Widget build(BuildContext context) {
-    final focus = TodayFocusEngine.build(_store.allTasks);
-
     Widget content;
     switch (_current) {
       case AppSection.dashboard:
         content = HomeScreen(store: _store);
         break;
       case AppSection.todaysFocus:
-       content = TodayScreen(store: _store);
-
+        content = TodayScreen(store: _store);
         break;
       case AppSection.tasks:
         content = const Center(
@@ -58,13 +55,16 @@ class _AppShellState extends State<AppShell> {
       floatingActionButton: FloatingActionButton(
         backgroundColor: accentColor,
         onPressed: () {
-          // Task creation comes next phase
+          showDialog(
+            context: context,
+            builder: (_) => AddTaskDialog(store: _store),
+          );
         },
         child: const Icon(Icons.add, color: Colors.white),
       ),
       body: Row(
         children: [
-          // ===== SIDEBAR =====
+          // ===== SIDE NAV =====
           Container(
             width: 220,
             color: sideNavBg,

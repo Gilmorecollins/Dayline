@@ -1,64 +1,81 @@
 import 'package:flutter/material.dart';
-
+import '../../core/store/task_store.dart';
 import '../../core/logic/today_focus_engine.dart';
 import '../../core/models/task.dart';
 
 class TodayScreen extends StatelessWidget {
-  final TodayFocus focus;
+  final TaskStore store;
 
   const TodayScreen({
     super.key,
-    required this.focus,
+    required this.store,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF7F8FA),
-      appBar: AppBar(
-        title: const Text('Today'),
-        elevation: 0,
-        backgroundColor: const Color(0xFFF7F8FA),
-        foregroundColor: Colors.black87,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          if (focus.urgent.isNotEmpty) ...[
-            _sectionTitle('Urgent'),
-            const SizedBox(height: 12),
-            ...focus.urgent.map((t) => _TaskCard(task: t)),
-            const SizedBox(height: 28),
-          ],
-          _sectionTitle('Today'),
-          const SizedBox(height: 12),
-          if (focus.today.isEmpty)
-            const Text(
-              'Nothing else scheduled.',
-              style: TextStyle(color: Colors.black54),
-            ),
-          ...focus.today.map((t) => _TaskCard(task: t)),
-        ],
-      ),
-    );
-  }
+    return AnimatedBuilder(
+      animation: store,
+      builder: (context, _) {
+        final focus = TodayFocusEngine.build(store.allTasks);
 
-  Widget _sectionTitle(String text) {
-    return Text(
-      text,
-      style: const TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.w600,
-        color: Colors.black87,
-      ),
+        return Scaffold(
+          backgroundColor: const Color(0xFFF7F8FA),
+          appBar: AppBar(
+            title: const Text("Today's Focus"),
+            elevation: 0,
+            backgroundColor: const Color(0xFFF7F8FA),
+            foregroundColor: Colors.black87,
+          ),
+          body: ListView(
+            padding: const EdgeInsets.all(20),
+            children: [
+              if (focus.urgent.isNotEmpty) ...[
+                const Text(
+                  'Urgent',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ...focus.urgent.map((task) => _TaskTile(
+                      task: task,
+                      store: store,
+                    )),
+                const SizedBox(height: 24),
+              ],
+
+              if (focus.today.isNotEmpty) ...[
+                const Text(
+                  'Today',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ...focus.today.map((task) => _TaskTile(
+                      task: task,
+                      store: store,
+                    )),
+              ],
+            ],
+          ),
+        );
+      },
     );
   }
 }
 
-class _TaskCard extends StatelessWidget {
+class _TaskTile extends StatelessWidget {
   final Task task;
+  final TaskStore store;
 
-  const _TaskCard({required this.task});
+
+  const _TaskTile({
+    required this.task,
+    required this.store,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -67,34 +84,29 @@ class _TaskCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Text(
-            task.title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: Colors.black87,
+          Expanded(
+            child: Text(
+              task.title,
+              style: const TextStyle(fontSize: 15),
             ),
           ),
-          const SizedBox(height: 6),
-          Text(
-            'Due at ${task.deadline.hour.toString().padLeft(2, '0')}:'
-            '${task.deadline.minute.toString().padLeft(2, '0')}',
-            style: const TextStyle(
-              fontSize: 13,
-              color: Colors.black54,
-            ),
+          IconButton(
+            tooltip: 'Mark completed',
+            icon: const Icon(Icons.check_circle_outline),
+            onPressed: () {
+              store.updateStatus(task.id, TaskStatus.completed);
+            },
           ),
         ],
       ),

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import 'features/home/home_screen.dart';
 import 'features/today/today_screen.dart';
-import 'core/logic/demo_tasks.dart';
+
+import 'core/store/task_store.dart';
+import 'core/store/demo_task_seed.dart';
 import 'core/logic/today_focus_engine.dart';
 
 enum AppSection {
@@ -21,31 +23,43 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   AppSection _current = AppSection.dashboard;
 
+  late final TaskStore _store;
+
   static const Color accentColor = Color(0xFF4A6CF7);
   static const Color sideNavBg = Color(0xFFF3F4F6);
 
   @override
+  void initState() {
+    super.initState();
+    _store = seedTaskStore();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final tasks = demoTasks();
-    final focus = TodayFocusEngine.build(tasks);
+    final focus = TodayFocusEngine.build(_store.allTasks);
 
     Widget content;
     switch (_current) {
       case AppSection.dashboard:
-        content = const HomeScreen();
+        content = HomeScreen(store: _store);
         break;
       case AppSection.todaysFocus:
-        content = TodayScreen(focus: focus);
+       content = TodayScreen(store: _store);
+
         break;
       case AppSection.tasks:
-        content = const Center(child: Text('Tasks (coming soon)'));
+        content = const Center(
+          child: Text('Tasks (coming soon)'),
+        );
         break;
     }
 
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         backgroundColor: accentColor,
-        onPressed: () {},
+        onPressed: () {
+          // Task creation comes next phase
+        },
         child: const Icon(Icons.add, color: Colors.white),
       ),
       body: Row(
@@ -69,7 +83,7 @@ class _AppShellState extends State<AppShell> {
                   ),
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 32),
 
                 _SideNavItem(
                   icon: Icons.dashboard_outlined,
@@ -89,7 +103,8 @@ class _AppShellState extends State<AppShell> {
                   icon: Icons.list_alt_outlined,
                   label: 'Tasks',
                   selected: _current == AppSection.tasks,
-                  onTap: () => setState(() => _current = AppSection.tasks),
+                  onTap: () =>
+                      setState(() => _current = AppSection.tasks),
                 ),
               ],
             ),
@@ -118,7 +133,7 @@ class _SideNavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const accentColor = Color(0xFF4A6CF7);
+    const Color accentColor = Color(0xFF4A6CF7);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),

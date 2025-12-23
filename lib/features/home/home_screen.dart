@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+import '../../core/store/task_store.dart';
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+  final TaskStore store;
+
+  const HomeScreen({
+    super.key,
+    required this.store,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +22,6 @@ class HomeScreen extends StatelessWidget {
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
         actions: [
-          // Search field
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: SizedBox(
@@ -25,10 +30,6 @@ class HomeScreen extends StatelessWidget {
                 decoration: InputDecoration(
                   hintText: 'Search anything',
                   prefixIcon: const Icon(Icons.search, size: 20),
-                  suffixIcon: const Padding(
-                    padding: EdgeInsets.only(right: 8),
-                    child: Icon(Icons.keyboard, size: 16),
-                  ),
                   filled: true,
                   fillColor: Colors.white,
                   contentPadding:
@@ -41,22 +42,14 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 12),
-
-          // Settings button
           IconButton(
-            tooltip: 'Settings',
             onPressed: () {},
             icon: const Icon(Icons.settings_outlined),
           ),
-
-          // Help button
           IconButton(
-            tooltip: 'Help',
             onPressed: () {},
             icon: const Icon(Icons.help_outline),
           ),
-
           const SizedBox(width: 12),
         ],
       ),
@@ -65,35 +58,35 @@ class HomeScreen extends StatelessWidget {
         child: Wrap(
           spacing: 16,
           runSpacing: 16,
-          children: const [
+          children: [
             _SummaryCard(
               label: 'Total Tasks',
-              value: '—',
+              value: store.totalTasks.toString(),
               icon: Icons.list_alt,
             ),
             _SummaryCard(
               label: 'Today',
-              value: '—',
+              value: store.todayTasks.toString(),
               icon: Icons.today,
             ),
             _SummaryCard(
               label: 'Upcoming',
-              value: '—',
+              value: store.upcomingTasks.toString(),
               icon: Icons.schedule,
             ),
             _SummaryCard(
               label: 'In Progress',
-              value: '—',
+              value: store.inProgressTasks.toString(),
               icon: Icons.timelapse,
             ),
             _SummaryCard(
               label: 'Needs Review',
-              value: '—',
+              value: store.needsReviewTasks.toString(),
               icon: Icons.rate_review,
             ),
             _SummaryCard(
               label: 'Backlogs',
-              value: '—',
+              value: store.backlogTasks.toString(),
               icon: Icons.warning_amber_rounded,
             ),
           ],
@@ -133,18 +126,13 @@ class _SummaryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            icon,
-            size: 20,
-            color: Colors.black54,
-          ),
+          Icon(icon, size: 20, color: Colors.black54),
           const SizedBox(height: 12),
           Text(
             value,
             style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w600,
-              color: Colors.black87,
             ),
           ),
           const SizedBox(height: 4),

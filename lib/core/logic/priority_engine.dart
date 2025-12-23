@@ -1,9 +1,15 @@
 import '../models/task.dart';
 
 class PriorityEngine {
+  /// Calculates an effective priority based on time remaining.
+  /// This does NOT mutate the task.
   static TaskPriority calculate(Task task) {
+    if (task.dueAt == null) {
+      return task.priority;
+    }
+
     final now = DateTime.now();
-    final remaining = task.deadline.difference(now);
+    final remaining = task.dueAt!.difference(now);
 
     // Overdue or within 6 hours → Critical
     if (remaining.inMinutes <= 360) {
@@ -20,7 +26,7 @@ class PriorityEngine {
       return TaskPriority.medium;
     }
 
-    // Otherwise, keep original priority
-    return task.originalPriority;
+    // Otherwise, keep assigned priority
+    return task.priority;
   }
 }

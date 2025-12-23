@@ -1,9 +1,8 @@
 import '../models/task.dart';
-import 'priority_engine.dart';
 
 class TodayFocus {
-  final List<Task> urgent; // next 6 hours or overdue
-  final List<Task> today;  // rest of today
+  final List<Task> urgent;
+  final List<Task> today;
 
   TodayFocus({
     required this.urgent,
@@ -13,31 +12,14 @@ class TodayFocus {
 
 class TodayFocusEngine {
   static TodayFocus build(List<Task> tasks) {
-    final now = DateTime.now();
+    final urgent = tasks.where((t) {
+      if (t.dueAt == null) return false;
+      final now = DateTime.now();
+      final diff = t.dueAt!.difference(now);
+      return diff.inHours <= 6 && !t.isBacklog;
+    }).toList();
 
-    final urgent = <Task>[];
-    final today = <Task>[];
-
-    for (final task in tasks) {
-      if (task.status == TaskStatus.completed) continue;
-
-      final updatedPriority = PriorityEngine.calculate(task);
-      final hoursRemaining = task.deadline.difference(now).inHours;
-
-      final isToday =
-          task.deadline.year == now.year &&
-          task.deadline.month == now.month &&
-          task.deadline.day == now.day;
-
-      if (hoursRemaining <= 6) {
-        urgent.add(task);
-      } else if (isToday) {
-        today.add(task);
-      }
-    }
-
-    urgent.sort((a, b) => a.deadline.compareTo(b.deadline));
-    today.sort((a, b) => a.deadline.compareTo(b.deadline));
+    final today = tasks.where((t) => t.isToday && !urgent.contains(t)).toList();
 
     return TodayFocus(
       urgent: urgent,

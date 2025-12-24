@@ -22,7 +22,6 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
 
   DateTime _dueAt = DateTime.now();
   TaskPriority _priority = TaskPriority.medium;
-  bool _showCalendar = false;
 
   void _submit() {
     final title = _titleController.text.trim();
@@ -34,11 +33,35 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
       createdAt: DateTime.now(),
       dueAt: _dueAt,
       priority: _priority,
-      status: TaskStatus.pending, // ✅ FIXED
+      status: TaskStatus.pending,
     );
 
     widget.store.addTask(task);
     Navigator.pop(context);
+  }
+
+  void _openDatePicker() async {
+    await showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (_) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: DaylineCalendar(
+              selected: _dueAt,
+              onSelected: (date) {
+                setState(() => _dueAt = date);
+                Navigator.pop(context);
+              },
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -69,22 +92,22 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
               // ===== TASK TITLE =====
               TextField(
                 controller: _titleController,
+                autofocus: true,
                 decoration: const InputDecoration(
                   labelText: 'Task title',
                   border: UnderlineInputBorder(),
                 ),
+                onSubmitted: (_) => _submit(),
               ),
 
               const SizedBox(height: 20),
 
-              // ===== DATE + PRIORITY PREVIEW =====
+              // ===== DATE + PRIORITY =====
               Row(
                 children: [
                   InkWell(
                     borderRadius: BorderRadius.circular(10),
-                    onTap: () {
-                      setState(() => _showCalendar = !_showCalendar);
-                    },
+                    onTap: _openDatePicker,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
@@ -125,20 +148,6 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
                   ),
                 ],
               ),
-
-              // ===== INLINE CALENDAR =====
-              if (_showCalendar) ...[
-                const SizedBox(height: 12),
-                DaylineCalendar(
-                  selected: _dueAt,
-                  onSelected: (date) {
-                    setState(() {
-                      _dueAt = date;
-                      _showCalendar = false;
-                    });
-                  },
-                ),
-              ],
 
               const SizedBox(height: 20),
 

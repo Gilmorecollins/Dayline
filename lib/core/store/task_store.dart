@@ -4,34 +4,61 @@ import '../models/task.dart';
 class TaskStore extends ChangeNotifier {
   final List<Task> _tasks = [];
 
-  // ---------- Mutations ----------
+  // ─────────────────────────
+  // CRUD
+  // ─────────────────────────
   void addTask(Task task) {
     _tasks.add(task);
     notifyListeners();
   }
 
-  void removeTask(String taskId) {
-    _tasks.removeWhere((t) => t.id == taskId);
+  void updateStatus(String id, TaskStatus status) {
+    final index = _tasks.indexWhere((t) => t.id == id);
+    if (index == -1) return;
+
+    _tasks[index] = _tasks[index].copyWith(status: status);
     notifyListeners();
   }
 
-  void updateStatus(String taskId, TaskStatus status) {
-    final task = _tasks.firstWhere((t) => t.id == taskId);
-    task.status = status;
-    notifyListeners();
-  }
-
-  // ---------- Raw access ----------
+  // ─────────────────────────
+  // LIST GETTERS
+  // ─────────────────────────
   List<Task> get allTasks => List.unmodifiable(_tasks);
 
-  // ---------- Derived counts ----------
+  List<Task> get todayTaskList {
+    final now = DateTime.now();
+    return _tasks.where((task) {
+      if (task.dueAt == null) return false;
+      return task.dueAt!.year == now.year &&
+          task.dueAt!.month == now.month &&
+          task.dueAt!.day == now.day &&
+          task.status != TaskStatus.completed;
+    }).toList();
+  }
+
+  List<Task> get upcomingTaskList {
+    final now = DateTime.now();
+    return _tasks.where((task) {
+      if (task.dueAt == null) return false;
+      return task.dueAt!.isAfter(now) &&
+          task.status != TaskStatus.completed;
+    }).toList();
+  }
+
+  List<Task> get backlogTaskList {
+    return _tasks
+        .where((task) => task.status == TaskStatus.pending)
+        .toList();
+  }
+
+  // ─────────────────────────
+  // COUNT GETTERS (Dashboard)
+  // ─────────────────────────
   int get totalTasks => _tasks.length;
 
-  int get todayTasks =>
-      _tasks.where((t) => t.isToday && !t.isBacklog).length;
+  int get todayTasks => todayTaskList.length;
 
-  int get upcomingTasks =>
-      _tasks.where((t) => t.isUpcoming && !t.isBacklog).length;
+  int get upcomingTasks => upcomingTaskList.length;
 
   int get inProgressTasks =>
       _tasks.where((t) => t.status == TaskStatus.inProgress).length;
@@ -39,9 +66,5 @@ class TaskStore extends ChangeNotifier {
   int get needsReviewTasks =>
       _tasks.where((t) => t.status == TaskStatus.needsReview).length;
 
-  int get completedTasks =>
-      _tasks.where((t) => t.status == TaskStatus.completed).length;
-
-  int get backlogTasks =>
-      _tasks.where((t) => t.isBacklog).length;
+  int get backlogTasks => backlogTaskList.length;
 }

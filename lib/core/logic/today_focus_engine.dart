@@ -12,14 +12,28 @@ class TodayFocus {
 
 class TodayFocusEngine {
   static TodayFocus build(List<Task> tasks) {
-    final urgent = tasks.where((t) {
-      if (t.dueAt == null) return false;
-      final now = DateTime.now();
-      final diff = t.dueAt!.difference(now);
-      return diff.inHours <= 6 && !t.isBacklog;
+    final now = DateTime.now();
+
+    // 🔴 Urgent = due within 6 hours AND not completed
+    final urgent = tasks.where((task) {
+      if (task.dueAt == null) return false;
+      if (task.status == TaskStatus.completed) return false;
+
+      final diff = task.dueAt!.difference(now);
+      return diff.inHours <= 6 && diff.isNegative == false;
     }).toList();
 
-    final today = tasks.where((t) => t.isToday && !urgent.contains(t)).toList();
+    // 📅 Today = due today AND not already urgent AND not completed
+    final today = tasks.where((task) {
+      if (task.dueAt == null) return false;
+      if (task.status == TaskStatus.completed) return false;
+      if (urgent.contains(task)) return false;
+
+      final due = task.dueAt!;
+      return due.year == now.year &&
+          due.month == now.month &&
+          due.day == now.day;
+    }).toList();
 
     return TodayFocus(
       urgent: urgent,

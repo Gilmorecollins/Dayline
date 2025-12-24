@@ -11,6 +11,7 @@ TaskStore seedTaskStore() {
       createdAt: DateTime.now(),
       dueAt: DateTime.now().add(const Duration(hours: 2)),
       priority: TaskPriority.critical,
+      status: TaskStatus.pending,
     ),
   );
 
@@ -20,6 +21,7 @@ TaskStore seedTaskStore() {
       title: 'Prepare meeting notes',
       createdAt: DateTime.now(),
       dueAt: DateTime.now().add(const Duration(days: 1)),
+      priority: TaskPriority.high,
       status: TaskStatus.inProgress,
     ),
   );
@@ -30,6 +32,8 @@ TaskStore seedTaskStore() {
       title: 'Review documents',
       createdAt: DateTime.now(),
       dueAt: DateTime.now().subtract(const Duration(days: 1)),
+      priority: TaskPriority.medium,
+      status: TaskStatus.pending,
     ),
   );
 

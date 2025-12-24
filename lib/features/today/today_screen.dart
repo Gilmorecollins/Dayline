@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../core/store/task_store.dart';
-import '../../core/logic/today_focus_engine.dart';
+
 import '../../core/models/task.dart';
+import '../../core/store/task_store.dart';
 
 class TodayScreen extends StatelessWidget {
   final TaskStore store;
@@ -13,103 +13,120 @@ class TodayScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: store,
-      builder: (context, _) {
-        final focus = TodayFocusEngine.build(store.allTasks);
+    // ✅ use LIST getter, not count
+    final List<Task> tasks = store.todayTaskList;
 
-        return Scaffold(
-          backgroundColor: const Color(0xFFF7F8FA),
-          appBar: AppBar(
-            title: const Text("Today's Focus"),
-            elevation: 0,
-            backgroundColor: const Color(0xFFF7F8FA),
-            foregroundColor: Colors.black87,
-          ),
-          body: ListView(
-            padding: const EdgeInsets.all(20),
-            children: [
-              if (focus.urgent.isNotEmpty) ...[
-                const Text(
-                  'Urgent',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                ...focus.urgent.map((task) => _TaskTile(
-                      task: task,
-                      store: store,
-                    )),
-                const SizedBox(height: 24),
-              ],
+    if (tasks.isEmpty) {
+      return const Center(
+        child: Text(
+          'No tasks for today 🎉',
+          style: TextStyle(color: Colors.black54),
+        ),
+      );
+    }
 
-              if (focus.today.isNotEmpty) ...[
-                const Text(
-                  'Today',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                ...focus.today.map((task) => _TaskTile(
-                      task: task,
-                      store: store,
-                    )),
-              ],
-            ],
-          ),
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: tasks.length,
+      itemBuilder: (_, index) {
+        final task = tasks[index];
+
+        return _TaskTile(
+          task: task,
+          onAdvance: () {
+            store.updateStatus(
+              task.id,
+              _nextStatus(task.status),
+            );
+          },
         );
       },
     );
+  }
+
+  TaskStatus _nextStatus(TaskStatus status) {
+    switch (status) {
+      case TaskStatus.pending:
+        return TaskStatus.inProgress;
+      case TaskStatus.inProgress:
+        return TaskStatus.needsReview;
+      case TaskStatus.needsReview:
+        return TaskStatus.completed;
+      case TaskStatus.completed:
+        return TaskStatus.completed;
+    }
   }
 }
 
 class _TaskTile extends StatelessWidget {
   final Task task;
-  final TaskStore store;
-
+  final VoidCallback onAdvance;
 
   const _TaskTile({
     required this.task,
-    required this.store,
+    required this.onAdvance,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isCompleted = task.status == TaskStatus.completed;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            blurRadius: 8,
+            color: Color(0x11000000),
           ),
         ],
       ),
       child: Row(
         children: [
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(
+              color: _statusColor(task.status),
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
               task.title,
-              style: const TextStyle(fontSize: 15),
+              style: TextStyle(
+                fontSize: 15,
+                color: isCompleted ? Colors.black38 : Colors.black87,
+                decoration:
+                    isCompleted ? TextDecoration.lineThrough : null,
+              ),
             ),
           ),
-          IconButton(
-            tooltip: 'Mark completed',
-            icon: const Icon(Icons.check_circle_outline),
-            onPressed: () {
-              store.updateStatus(task.id, TaskStatus.completed);
-            },
-          ),
+          if (!isCompleted)
+            IconButton(
+              tooltip: 'Advance status',
+              icon: const Icon(Icons.arrow_forward_ios, size: 16),
+              onPressed: onAdvance,
+            ),
         ],
       ),
     );
+  }
+
+  Color _statusColor(TaskStatus status) {
+    switch (status) {
+      case TaskStatus.pending:
+        return Colors.grey;
+      case TaskStatus.inProgress:
+        return Colors.blue;
+      case TaskStatus.needsReview:
+        return Colors.orange;
+      case TaskStatus.completed:
+        return Colors.green;
+    }
   }
 }

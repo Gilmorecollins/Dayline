@@ -6,58 +6,45 @@ enum TaskStatus {
 }
 
 enum TaskPriority {
-  critical,
-  high,
-  medium,
   low,
+  medium,
+  high,
+  critical,
 }
 
 class Task {
   final String id;
   final String title;
-  final String? description;
-
   final DateTime createdAt;
   final DateTime? dueAt;
+  final TaskPriority priority;
+  final TaskStatus status;
 
-  TaskStatus status;
-  TaskPriority priority;
-
-  Task({
+  const Task({
     required this.id,
     required this.title,
-    this.description,
     required this.createdAt,
     this.dueAt,
-    this.status = TaskStatus.pending,
-    this.priority = TaskPriority.medium,
+    required this.priority,
+    required this.status,
   });
 
-  /// A task is overdue (Backlog) if:
-  /// - It has a due date
-  /// - It is NOT completed
-  /// - Due date is in the past
-  bool get isBacklog {
-    if (dueAt == null) return false;
-    if (status == TaskStatus.completed) return false;
-    return dueAt!.isBefore(DateTime.now());
-  }
-
-  /// A task belongs to "Today"
-  bool get isToday {
-    if (dueAt == null) return false;
-    final now = DateTime.now();
-    return dueAt!.year == now.year &&
-        dueAt!.month == now.month &&
-        dueAt!.day == now.day;
-  }
-
-  /// A task is upcoming if due in the future (excluding today)
-  bool get isUpcoming {
-    if (dueAt == null) return false;
-    final now = DateTime.now();
-    return dueAt!.isAfter(
-      DateTime(now.year, now.month, now.day, 23, 59),
+  // ✅ REQUIRED for immutable updates
+  Task copyWith({
+    String? id,
+    String? title,
+    DateTime? createdAt,
+    DateTime? dueAt,
+    TaskPriority? priority,
+    TaskStatus? status,
+  }) {
+    return Task(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      createdAt: createdAt ?? this.createdAt,
+      dueAt: dueAt ?? this.dueAt,
+      priority: priority ?? this.priority,
+      status: status ?? this.status,
     );
   }
 }

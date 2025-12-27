@@ -4,91 +4,136 @@ import 'core/store/task_store.dart';
 import 'features/home/home_screen.dart';
 import 'features/today/today_screen.dart';
 
-enum AppSection {
-  dashboard,
-  today,
-  tasks,
-}
-
 class AppShell extends StatefulWidget {
   final TaskStore store;
 
-  const AppShell({
-    super.key,
-    required this.store,
-  });
+  const AppShell({super.key, required this.store});
 
   @override
   State<AppShell> createState() => _AppShellState();
 }
 
 class _AppShellState extends State<AppShell> {
-  AppSection _current = AppSection.dashboard;
+  int _index = 0;
 
   @override
   Widget build(BuildContext context) {
-    Widget content;
-
-    switch (_current) {
-      case AppSection.dashboard:
-        content = HomeScreen(store: widget.store);
-        break;
-      case AppSection.today:
-        content = TodayScreen(store: widget.store);
-        break;
-      case AppSection.tasks:
-        content = const Center(child: Text('Tasks (coming soon)'));
-        break;
-    }
-
     return Scaffold(
+      backgroundColor: const Color(0xFFFDF7FB),
+
+      // ───────────────── AppBar ─────────────────
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        titleSpacing: 0,
+        title: Row(
+          children: const [
+            SizedBox(width: 12),
+            Icon(Icons.check_circle_outline, color: Colors.blue),
+            SizedBox(width: 8),
+            Text(
+              'Dayline',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 18,
+                color: Colors.black87,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          IconButton(
+            tooltip: 'Search (coming soon)',
+            icon: const Icon(Icons.search),
+            onPressed: () {},
+          ),
+          IconButton(
+            tooltip: 'Settings (coming soon)',
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () {},
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
+
+      // ───────────────── Body ─────────────────
       body: Row(
         children: [
           _SideNav(
-            current: _current,
-            onSelect: (s) => setState(() => _current = s),
+            index: _index,
+            onChanged: (i) => setState(() => _index = i),
           ),
-          Expanded(child: content),
+          Expanded(child: _buildContent()),
         ],
+      ),
+
+      // ───────────────── Add Task FAB ─────────────────
+      floatingActionButton: FloatingActionButton(
+        tooltip: 'Add Task',
+        backgroundColor: Colors.blue,
+        child: const Icon(Icons.add),
+        onPressed: () {
+          // Hook dialog later (Phase 4)
+        },
       ),
     );
   }
+
+  Widget _buildContent() {
+    switch (_index) {
+      case 0:
+        return HomeScreen(store: widget.store);
+      case 1:
+        return TodayScreen(store: widget.store);
+      case 2:
+        return const Center(child: Text('Tasks (coming soon)'));
+      default:
+        return const SizedBox.shrink();
+    }
+  }
 }
 
+// ───────────────── Side Navigation ─────────────────
+
 class _SideNav extends StatelessWidget {
-  final AppSection current;
-  final ValueChanged<AppSection> onSelect;
+  final int index;
+  final ValueChanged<int> onChanged;
 
   const _SideNav({
-    required this.current,
-    required this.onSelect,
+    required this.index,
+    required this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: 220,
-      color: const Color(0xFFF7F8FA),
+      padding: const EdgeInsets.only(top: 16),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          right: BorderSide(color: Color(0x11000000)),
+        ),
+      ),
       child: Column(
         children: [
-          const SizedBox(height: 24),
           _NavItem(
-            icon: Icons.dashboard,
+            icon: Icons.dashboard_outlined,
             label: 'Dashboard',
-            active: current == AppSection.dashboard,
-            onTap: () => onSelect(AppSection.dashboard),
+            selected: index == 0,
+            onTap: () => onChanged(0),
           ),
           _NavItem(
-            icon: Icons.today,
+            icon: Icons.today_outlined,
             label: "Today's Focus",
-            active: current == AppSection.today,
-            onTap: () => onSelect(AppSection.today),
+            selected: index == 1,
+            onTap: () => onChanged(1),
           ),
           _NavItem(
-            icon: Icons.list,
+            icon: Icons.list_alt_outlined,
             label: 'Tasks',
-            active: current == AppSection.tasks,
-            onTap: () => onSelect(AppSection.tasks),
+            selected: index == 2,
+            onTap: () => onChanged(2),
           ),
         ],
       ),
@@ -99,30 +144,42 @@ class _SideNav extends StatelessWidget {
 class _NavItem extends StatelessWidget {
   final IconData icon;
   final String label;
-  final bool active;
+  final bool selected;
   final VoidCallback onTap;
 
   const _NavItem({
     required this.icon,
     required this.label,
-    required this.active,
+    required this.selected,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final color = active ? Colors.blue : Colors.black54;
-
     return InkWell(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        color: active ? Colors.blue.withOpacity(0.08) : null,
+        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: selected ? const Color(0xFFE8F1FF) : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+        ),
         child: Row(
           children: [
-            Icon(icon, color: color),
+            Icon(
+              icon,
+              size: 20,
+              color: selected ? Colors.blue : Colors.black54,
+            ),
             const SizedBox(width: 12),
-            Text(label, style: TextStyle(color: color)),
+            Text(
+              label,
+              style: TextStyle(
+                fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                color: selected ? Colors.blue : Colors.black87,
+              ),
+            ),
           ],
         ),
       ),

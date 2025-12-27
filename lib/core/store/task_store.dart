@@ -1,37 +1,26 @@
-import 'dart:collection';
+import 'package:flutter/foundation.dart';
 import '../models/task.dart';
 
-class TaskStore {
+class TaskStore extends ChangeNotifier {
   final List<Task> _tasks = [];
 
-  // ===== Lifecycle =====
-  Future<void> load() async {
-    // Phase 2: no persistence yet
-    // Phase 3 will hydrate from disk
-    return;
-  }
+  // --------------------------------------------------
+  // Core access
+  // --------------------------------------------------
 
-  // ===== Core CRUD =====
-  void addTask(Task task) {
-    _tasks.add(task);
-  }
+  List<Task> get tasks => List.unmodifiable(_tasks);
 
-  void updateStatus(String id, TaskStatus status) {
-    final index = _tasks.indexWhere((t) => t.id == id);
-    if (index == -1) return;
+  // 👇 REQUIRED by TodayScreen
+  List<Task> get todayTasks =>
+      _tasks.where((t) => t.isToday && !t.isCompleted).toList();
 
-    _tasks[index] = _tasks[index].copyWith(status: status);
-  }
+  // --------------------------------------------------
+  // Counters (Dashboard)
+  // --------------------------------------------------
 
-  // ===== Read-only views =====
-  UnmodifiableListView<Task> get allTasks =>
-      UnmodifiableListView(_tasks);
-
-  // ===== Counters (USED BY UI) =====
   int get totalTasks => _tasks.length;
 
-  int get todayCount =>
-      _tasks.where((t) => t.isToday).length;
+  int get todayCount => todayTasks.length;
 
   int get inProgressCount =>
       _tasks.where((t) => t.status == TaskStatus.inProgress).length;
@@ -42,9 +31,29 @@ class TaskStore {
   int get backlogCount =>
       _tasks.where((t) => t.isBacklog).length;
 
-  // ===== Lists =====
-  List<Task> get todayTasks =>
-      _tasks.where((t) => t.isToday).toList();
+  // --------------------------------------------------
+  // Mutations
+  // --------------------------------------------------
 
-  bool get isEmpty => _tasks.isEmpty;
+  void addTask(Task task) {
+    _tasks.add(task);
+    notifyListeners();
+  }
+
+  void updateStatus(String taskId, TaskStatus status) {
+    final index = _tasks.indexWhere((t) => t.id == taskId);
+    if (index == -1) return;
+
+    _tasks[index] = _tasks[index].copyWith(status: status);
+    notifyListeners();
+  }
+
+  // --------------------------------------------------
+  // Lifecycle (Phase 3 – placeholder)
+  // --------------------------------------------------
+
+  Future<void> load() async {
+    // Persistence will be implemented next phase
+    return;
+  }
 }

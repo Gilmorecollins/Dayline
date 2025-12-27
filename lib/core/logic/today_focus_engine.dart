@@ -14,7 +14,6 @@ class TodayFocusEngine {
   static TodayFocus build(List<Task> tasks) {
     final now = DateTime.now();
 
-    // 🔴 Urgent = due within 6 hours AND not completed
     final urgent = tasks.where((task) {
       if (task.dueAt == null) return false;
       if (task.status == TaskStatus.completed) return false;

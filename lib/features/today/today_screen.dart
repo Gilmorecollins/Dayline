@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../../core/models/task.dart';
 import '../../core/store/task_store.dart';
 
@@ -13,8 +12,7 @@ class TodayScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ✅ use LIST getter, not count
-    final List<Task> tasks = store.todayTaskList;
+    final List<Task> tasks = store.todayTasks;
 
     if (tasks.isEmpty) {
       return const Center(
@@ -34,10 +32,7 @@ class TodayScreen extends StatelessWidget {
         return _TaskTile(
           task: task,
           onAdvance: () {
-            store.updateStatus(
-              task.id,
-              _nextStatus(task.status),
-            );
+            store.updateStatus(task.id, _nextStatus(task.status));
           },
         );
       },
@@ -69,7 +64,7 @@ class _TaskTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isCompleted = task.status == TaskStatus.completed;
+    final isCompleted = task.isCompleted;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),

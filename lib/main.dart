@@ -1,20 +1,30 @@
 import 'package:flutter/material.dart';
+
+import 'core/store/task_store.dart';
+import 'core/store/demo_task_seed.dart';
 import 'app_shell.dart';
 
-void main() {
-  runApp(const DaylineApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final store = TaskStore();
+  await store.load();
+  await seedTaskStoreIfEmpty(store);
+
+  runApp(DaylineApp(store: store));
 }
 
 class DaylineApp extends StatelessWidget {
-  const DaylineApp({super.key});
+  final TaskStore store;
+
+  const DaylineApp({super.key, required this.store});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Dayline',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(useMaterial3: true),
-      home: const AppShell(),
+      home: AppShell(store: store),
     );
   }
 }

@@ -1,15 +1,19 @@
-import 'package:flutter/foundation.dart';
+import 'dart:collection';
 import '../models/task.dart';
 
-class TaskStore extends ChangeNotifier {
+class TaskStore {
   final List<Task> _tasks = [];
 
-  // ─────────────────────────
-  // CRUD
-  // ─────────────────────────
+  // ===== Lifecycle =====
+  Future<void> load() async {
+    // Phase 2: no persistence yet
+    // Phase 3 will hydrate from disk
+    return;
+  }
+
+  // ===== Core CRUD =====
   void addTask(Task task) {
     _tasks.add(task);
-    notifyListeners();
   }
 
   void updateStatus(String id, TaskStatus status) {
@@ -17,54 +21,30 @@ class TaskStore extends ChangeNotifier {
     if (index == -1) return;
 
     _tasks[index] = _tasks[index].copyWith(status: status);
-    notifyListeners();
   }
 
-  // ─────────────────────────
-  // LIST GETTERS
-  // ─────────────────────────
-  List<Task> get allTasks => List.unmodifiable(_tasks);
+  // ===== Read-only views =====
+  UnmodifiableListView<Task> get allTasks =>
+      UnmodifiableListView(_tasks);
 
-  List<Task> get todayTaskList {
-    final now = DateTime.now();
-    return _tasks.where((task) {
-      if (task.dueAt == null) return false;
-      return task.dueAt!.year == now.year &&
-          task.dueAt!.month == now.month &&
-          task.dueAt!.day == now.day &&
-          task.status != TaskStatus.completed;
-    }).toList();
-  }
-
-  List<Task> get upcomingTaskList {
-    final now = DateTime.now();
-    return _tasks.where((task) {
-      if (task.dueAt == null) return false;
-      return task.dueAt!.isAfter(now) &&
-          task.status != TaskStatus.completed;
-    }).toList();
-  }
-
-  List<Task> get backlogTaskList {
-    return _tasks
-        .where((task) => task.status == TaskStatus.pending)
-        .toList();
-  }
-
-  // ─────────────────────────
-  // COUNT GETTERS (Dashboard)
-  // ─────────────────────────
+  // ===== Counters (USED BY UI) =====
   int get totalTasks => _tasks.length;
 
-  int get todayTasks => todayTaskList.length;
+  int get todayCount =>
+      _tasks.where((t) => t.isToday).length;
 
-  int get upcomingTasks => upcomingTaskList.length;
-
-  int get inProgressTasks =>
+  int get inProgressCount =>
       _tasks.where((t) => t.status == TaskStatus.inProgress).length;
 
-  int get needsReviewTasks =>
+  int get needsReviewCount =>
       _tasks.where((t) => t.status == TaskStatus.needsReview).length;
 
-  int get backlogTasks => backlogTaskList.length;
+  int get backlogCount =>
+      _tasks.where((t) => t.isBacklog).length;
+
+  // ===== Lists =====
+  List<Task> get todayTasks =>
+      _tasks.where((t) => t.isToday).toList();
+
+  bool get isEmpty => _tasks.isEmpty;
 }

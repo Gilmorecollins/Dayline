@@ -1,13 +1,18 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:dayline/main.dart';
+import 'package:dayline/core/store/task_store.dart';
+import 'package:dayline/core/store/demo_task_seed.dart';
 
 void main() {
-  testWidgets('Dayline app loads', (WidgetTester tester) async {
-    await tester.pumpWidget(const DaylineApp());
+  testWidgets('Dayline app loads without crashing',
+      (WidgetTester tester) async {
+    final store = TaskStore();
+    await seedTaskStoreIfEmpty(store);
 
-    // Verify that the app loads a widget tree
-    expect(find.byType(Placeholder), findsOneWidget);
+    await tester.pumpWidget(DaylineApp(store: store));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Dashboard'), findsOneWidget);
   });
 }

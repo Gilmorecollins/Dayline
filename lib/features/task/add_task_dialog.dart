@@ -2,26 +2,39 @@ import 'package:flutter/material.dart';
 
 import '../../core/models/task.dart';
 import '../../core/store/task_store.dart';
-import 'dayline_calendar.dart';
-import 'priority_selector.dart';
 
 class AddTaskDialog extends StatefulWidget {
   final TaskStore store;
 
-  const AddTaskDialog({
-    super.key,
-    required this.store,
-  });
+  const AddTaskDialog({super.key, required this.store});
 
   @override
   State<AddTaskDialog> createState() => _AddTaskDialogState();
 }
 
 class _AddTaskDialogState extends State<AddTaskDialog> {
-  final TextEditingController _titleController = TextEditingController();
-
-  DateTime _dueAt = DateTime.now();
+  final _titleController = TextEditingController();
+  DateTime? _dueAt;
   TaskPriority _priority = TaskPriority.medium;
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _dueAt ?? DateTime.now(),
+      firstDate: DateTime.now().subtract(const Duration(days: 1)),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+
+    if (picked != null) {
+      setState(() => _dueAt = picked);
+    }
+  }
 
   void _submit() {
     final title = _titleController.text.trim();
@@ -40,30 +53,6 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
     Navigator.pop(context);
   }
 
-  void _openDatePicker() async {
-    await showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (_) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: DaylineCalendar(
-              selected: _dueAt,
-              onSelected: (date) {
-                setState(() => _dueAt = date);
-                Navigator.pop(context);
-              },
-            ),
-          ),
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -78,7 +67,6 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ===== HEADER =====
               const Text(
                 'Add Task',
                 style: TextStyle(
@@ -86,88 +74,37 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-
               const SizedBox(height: 16),
 
-              // ===== TASK TITLE =====
+              // ───── Title ─────
               TextField(
                 controller: _titleController,
-                autofocus: true,
                 decoration: const InputDecoration(
                   labelText: 'Task title',
                   border: UnderlineInputBorder(),
                 ),
-                onSubmitted: (_) => _submit(),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
 
-              // ===== DATE + PRIORITY =====
+              // ───── Controls ─────
               Row(
                 children: [
-                  InkWell(
-                    borderRadius: BorderRadius.circular(10),
-                    onTap: _openDatePicker,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.black12),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.calendar_today, size: 18),
-                          const SizedBox(width: 8),
-                          Text(
-                            _formatDate(_dueAt),
-                            style: const TextStyle(fontSize: 13),
-                          ),
-                        ],
-                      ),
-                    ),
+                  _DateChip(
+                    date: _dueAt,
+                    onTap: _pickDate,
                   ),
-
                   const SizedBox(width: 12),
-
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.black12),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      _priority.name,
-                      style: const TextStyle(fontSize: 13),
-                    ),
+                  _PriorityChip(
+                    value: _priority,
+                    onChanged: (p) => setState(() => _priority = p),
                   ),
                 ],
               ),
 
-              const SizedBox(height: 20),
-
-              // ===== PRIORITY SELECTOR =====
-              const Text(
-                'Priority',
-                style: TextStyle(fontWeight: FontWeight.w500),
-              ),
-              const SizedBox(height: 8),
-
-              PrioritySelector(
-                selected: _priority,
-                onChanged: (value) {
-                  setState(() => _priority = value);
-                },
-              ),
-
               const SizedBox(height: 24),
 
-              // ===== ACTIONS =====
+              // ───── Actions ─────
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -175,21 +112,10 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
                     onPressed: () => Navigator.pop(context),
                     child: const Text('Cancel'),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 8),
                   ElevatedButton(
                     onPressed: _submit,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF4A6CF7),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: const Padding(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      child: Text('Add'),
-                    ),
+                    child: const Text('Add'),
                   ),
                 ],
               ),
@@ -199,10 +125,84 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
       ),
     );
   }
+}
 
-  String _formatDate(DateTime date) {
-    return '${date.day.toString().padLeft(2, '0')}/'
-        '${date.month.toString().padLeft(2, '0')}/'
-        '${date.year}';
+/* ───────────────── Date Chip ───────────────── */
+
+class _DateChip extends StatelessWidget {
+  final DateTime? date;
+  final VoidCallback onTap;
+
+  const _DateChip({this.date, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return ActionChip(
+      avatar: const Icon(Icons.calendar_today, size: 16),
+      label: Text(
+        date == null
+            ? 'Due date'
+            : '${date!.day}/${date!.month}/${date!.year}',
+      ),
+      onPressed: onTap,
+    );
+  }
+}
+
+/* ───────────────── Priority Chip ───────────────── */
+
+class _PriorityChip extends StatelessWidget {
+  final TaskPriority value;
+  final ValueChanged<TaskPriority> onChanged;
+
+  const _PriorityChip({
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<TaskPriority>(
+      tooltip: 'Priority',
+      onSelected: onChanged,
+      itemBuilder: (_) => TaskPriority.values
+          .map(
+            (p) => PopupMenuItem(
+              value: p,
+              child: Row(
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: _color(p),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(p.name),
+                ],
+              ),
+            ),
+          )
+          .toList(),
+      child: Chip(
+        avatar: Icon(Icons.flag, size: 16, color: _color(value)),
+        label: Text(value.name),
+      ),
+    );
+  }
+
+  Color _color(TaskPriority p) {
+    switch (p) {
+      case TaskPriority.critical:
+        return Colors.red;
+      case TaskPriority.high:
+        return Colors.orange;
+      case TaskPriority.medium:
+        return Colors.blue;
+      case TaskPriority.low:
+        return Colors.grey;
+    }
   }
 }

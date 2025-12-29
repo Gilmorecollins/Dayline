@@ -2,14 +2,14 @@ import '../models/task.dart';
 import 'task_store.dart';
 
 Future<void> seedTaskStoreIfEmpty(TaskStore store) async {
-  if (store.totalTasks > 0) return;
+  if (store.totalCount > 0) return;
 
   store.addTask(
     Task(
       id: 'seed-1',
       title: 'Welcome to Dayline',
       createdAt: DateTime.now(),
-      dueAt: DateTime.now().add(const Duration(hours: 2)),
+      dueAt: DateTime.now().add(const Duration(hours: 3)),
       priority: TaskPriority.medium,
       status: TaskStatus.pending,
     ),

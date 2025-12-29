@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-
 import 'core/store/task_store.dart';
-import 'core/store/demo_task_seed.dart';
 import 'app_shell.dart';
 
 Future<void> main() async {
@@ -9,7 +7,6 @@ Future<void> main() async {
 
   final store = TaskStore();
   await store.load();
-  await seedTaskStoreIfEmpty(store);
 
   runApp(DaylineApp(store: store));
 }
@@ -17,14 +14,22 @@ Future<void> main() async {
 class DaylineApp extends StatelessWidget {
   final TaskStore store;
 
-  const DaylineApp({super.key, required this.store});
+  const DaylineApp({
+    super.key,
+    required this.store,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Dayline',
-      debugShowCheckedModeBanner: false,
-      home: AppShell(store: store),
+    return AnimatedBuilder(
+      animation: store,
+      builder: (_, __) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Dayline',
+          home: AppShell(store: store),
+        );
+      },
     );
   }
 }

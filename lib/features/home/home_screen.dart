@@ -4,7 +4,10 @@ import '../../core/store/task_store.dart';
 class HomeScreen extends StatelessWidget {
   final TaskStore store;
 
-  const HomeScreen({super.key, required this.store});
+  const HomeScreen({
+    super.key,
+    required this.store,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -22,12 +25,31 @@ class HomeScreen extends StatelessWidget {
             spacing: 16,
             runSpacing: 16,
             children: [
-              _StatCard('Total Tasks', store.totalTasks, Icons.list),
-              _StatCard('Today', store.todayCount, Icons.today),
-              _StatCard('In Progress', store.inProgressCount, Icons.timelapse),
               _StatCard(
-                  'Needs Review', store.needsReviewCount, Icons.rate_review),
-              _StatCard('Backlogs', store.backlogCount, Icons.warning_amber),
+                label: 'Total Tasks',
+                value: store.totalCount,
+                icon: Icons.list_alt,
+              ),
+              _StatCard(
+                label: 'Today',
+                value: store.todayCount,
+                icon: Icons.today,
+              ),
+              _StatCard(
+                label: 'In Progress',
+                value: store.inProgressCount,
+                icon: Icons.timelapse,
+              ),
+              _StatCard(
+                label: 'Needs Review',
+                value: store.needsReviewCount,
+                icon: Icons.rate_review,
+              ),
+              _StatCard(
+                label: 'Backlogs',
+                value: store.backlogCount,
+                icon: Icons.warning_amber,
+              ),
             ],
           ),
         ],
@@ -41,7 +63,11 @@ class _StatCard extends StatelessWidget {
   final int value;
   final IconData icon;
 
-  const _StatCard(this.label, this.value, this.icon);
+  const _StatCard({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -55,18 +81,25 @@ class _StatCard extends StatelessWidget {
           BoxShadow(
             blurRadius: 10,
             color: Color(0x11000000),
-          )
+          ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, color: Colors.blue),
-          const SizedBox(height: 10),
-          Text('$value',
-              style:
-                  const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          Text(label, style: const TextStyle(color: Colors.black54)),
+          const SizedBox(height: 12),
+          Text(
+            '$value',
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            label,
+            style: const TextStyle(color: Colors.black54),
+          ),
         ],
       ),
     );
